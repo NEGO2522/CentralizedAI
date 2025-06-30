@@ -1,7 +1,14 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 
 const Footer = () => {
+  const location = useLocation();
+  const isHomePage = location.pathname === '/';
+
+  // Don't render the footer on the home page
+  if (isHomePage) {
+    return null;
+  }
+
   return (
     <footer className="bg-black text-gray-300 py-10 px-6 mt-16">
       <div className="max-w-7xl mx-auto grid md:grid-cols-4 gap-8 text-sm">
@@ -37,16 +44,15 @@ const Footer = () => {
         {/* Socials */}
         <div>
           <h3 className="font-semibold text-white mb-3">Follow Us</h3>
-          <ul className="space-y-2">
-            <li><a href="https://linkedin.com/in/kshitij" target="_blank" rel="noopener noreferrer" className="hover:text-white">LinkedIn</a></li>
-            <li><a href="https://github.com/yourusername" target="_blank" rel="noopener noreferrer" className="hover:text-white">GitHub</a></li>
-            <li><a href="#" className="hover:text-white">YouTube (Coming Soon)</a></li>
-          </ul>
+          <div className="flex space-x-4">
+            <a href="#" className="hover:text-white">Twitter</a>
+            <a href="#" className="hover:text-white">GitHub</a>
+            <a href="#" className="hover:text-white">LinkedIn</a>
+          </div>
         </div>
       </div>
-
-      <div className="text-center text-gray-500 text-xs mt-10 border-t border-gray-800 pt-4">
-        © {new Date().getFullYear()} AIVERSE. Crafted with ❤️ by Kshitij Jain.
+      <div className="border-t border-gray-800 mt-10 pt-6 text-center text-gray-500 text-sm">
+        <p>© {new Date().getFullYear()} AIVERSE. All rights reserved.</p>
       </div>
     </footer>
   );

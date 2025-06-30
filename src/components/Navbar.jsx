@@ -1,11 +1,18 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { Menu, X } from 'lucide-react'; // Using lucide icons for a modern touch
 
 const Navbar = () => {
   const [menuOpen, setMenuOpen] = useState(false);
+  const location = useLocation();
+  const isHomePage = location.pathname === '/';
 
   const toggleMenu = () => setMenuOpen(!menuOpen);
+
+  // Don't render the navbar on the home page
+  if (isHomePage) {
+    return null;
+  }
 
   const navItems = [
     { name: 'Home', path: '/' },

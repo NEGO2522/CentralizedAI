@@ -13,10 +13,10 @@ import Profile from './pages/Profile';
 
 const App = () => {
   return (
-    <div className="min-h-screen flex flex-col bg-gray-50 text-gray-900">
+    <div className="min-h-screen flex flex-col bg-gray-900">
       <Navbar />
 
-      <main className="flex-grow px-4 sm:px-6 md:px-10 py-6">
+      <main className="flex-grow">
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/applications" element={<Applications />} />
