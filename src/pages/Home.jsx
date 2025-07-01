@@ -1,137 +1,302 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import Loader from '../components/Loader';
+import { motion } from 'framer-motion';
 
-// Using direct image URLs
-const aiHeroImage = 'https://dlabs.ai/wp-content/uploads/2021/08/AI-outsmart-humans-1024x538.png';
-const aiChipImage = 'https://cdn-icons-png.flaticon.com/512/2103/2103633.png';
-const mlBrainImage = 'https://cdn-icons-png.flaticon.com/512/1998/1998664.png';
-const robotImage = 'https://cdn-icons-png.flaticon.com/512/2933/2933245.png';
+const ParticleBackground = () => {
+  const canvasRef = useRef(null);
+  
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    const ctx = canvas.getContext('2d');
+    
+    // Set canvas size
+    const resizeCanvas = () => {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    };
+    
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+    
+    // Create particles
+    const particles = [];
+    const particleCount = window.innerWidth < 768 ? 30 : 60;
+    
+    for (let i = 0; i < particleCount; i++) {
+      particles.push({
+        x: Math.random() * canvas.width,
+        y: Math.random() * canvas.height,
+        size: Math.random() * 3 + 1,
+        speedX: Math.random() * 0.5 - 0.25,
+        speedY: Math.random() * 0.5 - 0.25,
+        color: `rgba(255, 255, 255, ${Math.random() * 0.5 + 0.1})`
+      });
+    }
+    
+    // Animation loop
+    let animationId;
+    const animate = () => {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      
+      // Update and draw particles
+      particles.forEach(particle => {
+        particle.x += particle.speedX;
+        particle.y += particle.speedY;
+        
+        // Bounce off edges
+        if (particle.x < 0 || particle.x > canvas.width) particle.speedX *= -1;
+        if (particle.y < 0 || particle.y > canvas.height) particle.speedY *= -1;
+        
+        // Draw particle
+        ctx.fillStyle = particle.color;
+        ctx.beginPath();
+        ctx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
+        ctx.fill();
+      });
+      
+      animationId = requestAnimationFrame(animate);
+    };
+    
+    animate();
+    
+    return () => {
+      cancelAnimationFrame(animationId);
+      window.removeEventListener('resize', resizeCanvas);
+    };
+  }, []);
+  
+  return (
+    <canvas 
+      ref={canvasRef} 
+      className="absolute inset-0 w-full h-full opacity-20 pointer-events-none"
+    />
+  );
+};
 
 const Home = () => {
   const [loading, setLoading] = useState(true);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   useEffect(() => {
-    const timer = setTimeout(() => setLoading(false), 1500);
+    const timer = setTimeout(() => setLoading(false), 1000);
     return () => clearTimeout(timer);
   }, []);
 
   if (loading) return <Loader />;
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white">
-      {/* Hero Section with Gradient Overlay */}
-      <div className="relative overflow-hidden">
-        <div className="absolute inset-0 z-0">
-          <img 
-            src={aiHeroImage} 
-            alt="AI Technology" 
-            className="w-full h-full object-cover opacity-30"
+    <div className="relative min-h-screen flex flex-col bg-white">
+      {/* Main Content Area */}
+      <div className="flex-grow relative overflow-visible">
+        {/* Animated Gradient Background */}
+        <div className="absolute inset-0 overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-br from-blue-500 via-purple-600 to-blue-700 animate-gradient-xy rounded-b-[150px] overflow-hidden">
+            {/* Navigation */}
+            <div className="container mx-auto px-4 sm:px-6 lg:px-8 pt-6 relative z-50">
+              <div className="flex items-center justify-between">
+                {/* Logo */}
+                <div className="text-white text-2xl font-bold">AIVERSE</div>
+                
+                {/* Desktop Navigation - Centered */}
+                <div className="hidden md:flex absolute left-1/2 transform -translate-x-1/2">
+                  <div className="flex items-center space-x-8">
+                    <a href="#" className="text-white hover:text-gray-200 hover:underline cursor-pointer text-sm font-medium transition-colors">AI Tools</a>
+                    <a href="#" className="text-white hover:text-gray-200 hover:underline cursor-pointer text-sm font-medium transition-colors">AI for Business</a>
+                    <a href="#" className="text-white hover:text-gray-200 hover:underline cursor-pointer text-sm font-medium transition-colors">Newsletter</a>
+                    <a href="#" className="text-white hover:text-gray-200 hover:underline cursor-pointer text-sm font-medium transition-colors">Resources</a>
+                  </div>
+                </div>
+                
+                {/* Right side actions */}
+                <div className="hidden md:flex items-center space-x-4">
+                  <button className="text-white hover:text-gray-200 hover:underline cursor-pointer p-1">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                  </button>
+                  <a href="#" className="text-white hover:text-gray-200 hover:underline cursor-pointer text-sm font-medium transition-colors">Login</a>
+                  <a href="#" className="bg-white text-blue-600 hover:bg-gray-100 hover:underline cursor-pointer px-3 py-1.5 rounded-4xl text-sm font-medium transition-colors">
+                    Sign up for free
+                  </a>
+                </div>
+                
+                {/* Mobile menu button */}
+                <button 
+                  onClick={() => setIsMenuOpen(!isMenuOpen)}
+                  className="text-white focus:outline-none md:hidden z-50"
+                  aria-label="Toggle menu"
+                >
+                  {isMenuOpen ? (
+                    <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  ) : (
+                    <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16m-7 6h7" />
+                    </svg>
+                  )}
+                </button>
+              </div>
+
+              {/* Mobile Menu */}
+              <div 
+                className={`md:hidden absolute left-0 right-0 bg-gradient-to-br from-blue-500 via-purple-600 to-blue-700 px-4 pb-4 space-y-3 border-t border-white/20 transition-all duration-300 transform origin-top ${
+                  isMenuOpen 
+                    ? 'opacity-100 scale-y-100 max-h-screen mt-4' 
+                    : 'opacity-0 scale-y-95 max-h-0 pointer-events-none -mt-4'
+                }`}
+              >
+                <a href="#" className="block text-white hover:text-gray-200 hover:underline cursor-pointer py-2 text-base font-medium transition-colors">AI Tools</a>
+                <a href="#" className="block text-white hover:text-gray-200 hover:underline cursor-pointer py-2 text-base font-medium transition-colors">AI for Business</a>
+                <a href="#" className="block text-white hover:text-gray-200 hover:underline cursor-pointer py-2 text-base font-medium transition-colors">Newsletter</a>
+                <a href="#" className="block text-white hover:text-gray-200 hover:underline cursor-pointer py-2 text-base font-medium transition-colors">Resources</a>
+                <div className="pt-2 mt-2 border-t border-white/20">
+                  <a href="#" className="block text-white hover:text-gray-200 hover:underline cursor-pointer py-2 text-base font-medium transition-colors">Login</a>
+                  <a href="#" className="inline-block bg-white text-blue-600 hover:bg-gray-100 hover:underline cursor-pointer px-4 py-2 rounded-4xl text-base font-medium transition-colors mt-2">
+                    Sign up for free
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          {/* Gradient Blobs */}
+          <motion.div 
+            className="absolute top-1/4 left-1/4 w-96 h-96 rounded-full bg-blue-400/20 filter blur-3xl"
+            animate={{
+              x: [0, 50, 0],
+              y: [0, 30, 0],
+              scale: [1, 1.2, 1]
+            }}
+            transition={{
+              duration: 15,
+              repeat: Infinity,
+              repeatType: 'reverse',
+              ease: 'easeInOut'
+            }}
           />
-          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-gray-900 to-gray-900"></div>
+          <motion.div 
+            className="absolute bottom-1/4 right-1/4 w-96 h-96 rounded-full bg-purple-400/20 filter blur-3xl"
+            animate={{
+              x: [0, -40, 0],
+              y: [0, -20, 0],
+              scale: [1, 1.1, 1]
+            }}
+            transition={{
+              duration: 20,
+              repeat: Infinity,
+              repeatType: 'reverse',
+              ease: 'easeInOut',
+              delay: 2
+            }}
+          />
+          
+          {/* Subtle grid overlay */}
+          <div className="absolute inset-0 opacity-10">
+            <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPgogICAgPGcgZmlsbD0iI2ZmZiIgZmlsbC1vcGFjaXR5PSIwLjIiPgogICAgICA8cGF0aCBkPSJNMzYgMzR2LTRoLTJ2NGgtNHYyaDR2NGgydi00aDR2LTJoLTR6bTAtMzB2LTRoLTJ2NGgtNHYyaDR2NGgydi00aDR2LTJoLTR6TTYgMzR2LTRINHY0SDB2Mmg0djRoMnYtNGg0di0ySDZ6TTYgNHYtNEg0djRIMHYyaDR2NEg2VjR6Ii8+CiAgICA8L2c+CiAgPC9nPgo8L3N2Zz4K')]"></div>
+          </div>
+          
+          <ParticleBackground />
         </div>
-        
-        <div className="relative z-10 max-w-7xl mx-auto px-6 py-32 md:py-40 text-center">
-          <h1 className="text-5xl md:text-7xl font-extrabold mb-6 leading-tight">
-            <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500">
-              Welcome to AIVERSE
-            </span>
-          </h1>
-          <p className="text-xl md:text-2xl text-gray-300 max-w-3xl mx-auto mb-10">
-            Explore the Universe of AI, ML & Robotics. Your gateway to 50+ intelligent tools transforming tomorrow.
-          </p>
-          <div className="flex flex-col sm:flex-row justify-center gap-4">
-            <Link
-              to="/applications"
-              className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white text-lg font-semibold py-3 px-8 rounded-full transition-all transform hover:-translate-y-1 hover:shadow-lg hover:shadow-blue-500/20"
+
+        {/* Content */}
+        <div className="relative z-10 min-h-[80vh] flex items-center justify-center px-4">
+          <div className="text-center max-w-4xl mx-auto">
+            <motion.h1 
+              className="text-4xl md:text-5xl font-semibold mb-6 leading-tight text-white"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8 }}
             >
-              Discover AI Tools
-            </Link>
-            <Link
-              to="/learnai"
-              className="bg-transparent border-2 border-blue-500 text-blue-400 hover:bg-blue-500/10 text-lg font-semibold py-3 px-8 rounded-full transition-all transform hover:-translate-y-1"
+              Everything your business needs to master AI, all in one place.
+            </motion.h1>
+            
+            <motion.p 
+              className="text-xl mb-8 max-w-2xl mx-auto text-white/90"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 0.2 }}
             >
-              Learn AI
-            </Link>
+              Explore top AI tools and learn how to use them effectively.
+            </motion.p>
+            
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 0.4 }}
+            >
+              <Link
+                to="/get-started"
+                className="inline-block bg-white  hover:bg-gray-100 font-medium rounded-4xl px-8 py-3 text-lg transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl"
+              >
+                Join For Free
+              </Link>
+            </motion.div>
+
+            {/* Trusted By Section */}
+            <motion.div 
+              className="mt-16"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 0.6 }}
+            >
+              <p className="text-sm text-white/70 mb-6 tracking-wider">TRUSTED BY</p>
+              <div className="flex flex-wrap justify-center items-center gap-x-12 gap-y-6">
+                {[
+                  { 
+                    name: 'ChatGPT',
+                    icon: 'M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z',
+                    color: 'text-green-500'
+                  },
+                  { 
+                    name: 'Perplexity',
+                    icon: 'M12 2L4 7v10l8 5 8-5V7l-8-5z',
+                    color: 'text-blue-500'
+                  },
+                  { 
+                    name: 'Groq',
+                    icon: 'M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5',
+                    color: 'text-purple-500'
+                  },
+                  { 
+                    name: 'Grammarly',
+                    icon: 'M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5',
+                    color: 'text-blue-400'
+                  }
+                ].map((company, index) => (
+                  <div key={index} className="flex items-center space-x-2 group transform transition-transform hover:scale-105">
+                    <div className={`h-8 w-8 flex items-center justify-center ${company.color}`}>
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5">
+                        <path d={company.icon} />
+                      </svg>
+                    </div>
+                    <span className="text-sm font-medium text-white group-hover:opacity-100 opacity-90 transition-opacity">
+                      {company.name}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </motion.div>
           </div>
         </div>
       </div>
 
-      {/* Features Section */}
-      <div className="relative py-20 bg-gradient-to-b from-gray-900 to-gray-800">
-        <div className="max-w-7xl mx-auto px-6">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold mb-4">
-              <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-500">
-                Explore Our AI Universe
-              </span>
-            </h2>
-            <p className="text-xl text-gray-400 max-w-3xl mx-auto">
-              Discover powerful tools and resources across different AI domains
-            </p>
-          </div>
-
-          <div className="grid md:grid-cols-3 gap-8">
-            {/* AI & Automation Card */}
-            <div className="group bg-gray-800/50 backdrop-blur-sm rounded-2xl p-8 border border-gray-700/50 hover:border-blue-500/30 transition-all duration-300 hover:-translate-y-2">
-              <div className="w-20 h-20 bg-blue-500/10 rounded-xl flex items-center justify-center mb-6 mx-auto group-hover:scale-110 transition-transform">
-                <img src={aiChipImage} alt="AI Chip" className="w-12 h-12 object-contain" />
-              </div>
-              <h3 className="text-2xl font-bold text-center text-blue-400 mb-4">AI & Automation</h3>
-              <p className="text-gray-300 text-center">
-                Find tools that write content, code, generate images, videos, and automate repetitive tasks using cutting-edge artificial intelligence.
-              </p>
-            </div>
-
-            {/* Machine Learning Card */}
-            <div className="group bg-gray-800/50 backdrop-blur-sm rounded-2xl p-8 border border-gray-700/50 hover:border-green-500/30 transition-all duration-300 hover:-translate-y-2">
-              <div className="w-20 h-20 bg-green-500/10 rounded-xl flex items-center justify-center mb-6 mx-auto group-hover:scale-110 transition-transform">
-                <img src={mlBrainImage} alt="ML Brain" className="w-12 h-12 object-contain" />
-              </div>
-              <h3 className="text-2xl font-bold text-center text-green-400 mb-4">Machine Learning</h3>
-              <p className="text-gray-300 text-center">
-                Explore ML-based platforms and models that learn, predict, and adapt — from data analytics to language models.
-              </p>
-            </div>
-
-            {/* Robotics & Vision Card */}
-            <div className="group bg-gray-800/50 backdrop-blur-sm rounded-2xl p-8 border border-gray-700/50 hover:border-purple-500/30 transition-all duration-300 hover:-translate-y-2">
-              <div className="w-20 h-20 bg-purple-500/10 rounded-xl flex items-center justify-center mb-6 mx-auto group-hover:scale-110 transition-transform">
-                <img src={robotImage} alt="Robot Vision" className="w-12 h-12 object-contain" />
-              </div>
-              <h3 className="text-2xl font-bold text-center text-purple-400 mb-4">Robotics & Vision</h3>
-              <p className="text-gray-300 text-center">
-                Dive into AI-enhanced vision systems, robot control tools, and futuristic innovations powering the next-gen robotics revolution.
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* CTA Section */}
-      <div className="relative py-24 bg-gradient-to-r from-blue-900/30 via-purple-900/30 to-pink-900/30 overflow-hidden">
-        <div className="absolute inset-0 bg-grid-white/5 [mask-image:linear-gradient(0deg,transparent,white,transparent)]"></div>
-        <div className="relative max-w-5xl mx-auto px-6 text-center">
-          <h2 className="text-4xl font-bold mb-6">
-            Join the AI Revolution with <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500">AIVERSE</span>
+      {/* White Bottom Section */}
+      <div className="bg-white w-full py-12 px-4">
+        <div className="max-w-6xl mx-auto text-center">
+          <h2 className="text-2xl md:text-3xl font-semibold text-gray-800 mb-4">
+            Ready to get started?
           </h2>
-          <p className="text-xl text-gray-300 mb-10 max-w-3xl mx-auto">
-            A platform built by students, for the curious minds of tomorrow. Stay ahead with AI tools, blogs, and community support.
+          <p className="text-gray-600 mb-6 max-w-2xl mx-auto">
+            Join thousands of businesses already using our platform to master AI.
           </p>
-          <div className="flex flex-wrap justify-center gap-4">
-            <Link
-              to="/blog"
-              className="bg-white hover:bg-gray-100 text-gray-900 font-semibold py-3 px-8 rounded-full transition-all transform hover:-translate-y-1 hover:shadow-lg"
-            >
-              Read Our Blog
-            </Link>
-            <Link
-              to="/contact"
-              className="bg-transparent border-2 border-white/20 hover:border-white/40 text-white font-semibold py-3 px-8 rounded-full transition-all transform hover:-translate-y-1 hover:bg-white/5"
-            >
-              Contact Us
-            </Link>
-          </div>
+          <Link
+            to="/get-started"
+            className="inline-block bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg px-6 py-2.5 text-lg transition-colors duration-200"
+          >
+            Get Started for Free
+          </Link>
         </div>
       </div>
     </div>
