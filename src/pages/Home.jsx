@@ -1,7 +1,9 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import Loader from '../components/Loader';
 import { motion } from 'framer-motion';
+import { auth } from '../Firebase/firebase';
+import { onAuthStateChanged } from 'firebase/auth'
 
 const ParticleBackground = () => {
   const canvasRef = useRef(null);
@@ -77,10 +79,21 @@ const ParticleBackground = () => {
 const Home = () => {
   const [loading, setLoading] = useState(true);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const timer = setTimeout(() => setLoading(false), 1000);
-    return () => clearTimeout(timer);
+    
+    // Check auth state
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      setIsLoggedIn(!!user);
+    });
+    
+    return () => {
+      clearTimeout(timer);
+      unsubscribe();
+    };
   }, []);
 
   if (loading) return <Loader />;
@@ -101,10 +114,10 @@ const Home = () => {
                 {/* Desktop Navigation - Centered */}
                 <div className="hidden md:flex absolute left-1/2 transform -translate-x-1/2">
                   <div className="flex items-center space-x-8">
-                    <a href="#" className="text-white hover:text-gray-200 hover:underline cursor-pointer text-sm font-medium transition-colors">AI Tools</a>
+                    <Link to="/applications" className="text-white hover:text-gray-200 hover:underline cursor-pointer text-sm font-medium transition-colors">AI Tools</Link>
                     <a href="#" className="text-white hover:text-gray-200 hover:underline cursor-pointer text-sm font-medium transition-colors">AI for Business</a>
-                    <a href="#" className="text-white hover:text-gray-200 hover:underline cursor-pointer text-sm font-medium transition-colors">Newsletter</a>
-                    <a href="#" className="text-white hover:text-gray-200 hover:underline cursor-pointer text-sm font-medium transition-colors">Resources</a>
+                    <Link to="/blog" className="text-white hover:text-gray-200 hover:underline cursor-pointer text-sm font-medium transition-colors">Newsletter</Link>
+                    <Link to="/learnai" className="text-white hover:text-gray-200 hover:underline cursor-pointer text-sm font-medium transition-colors">Resources</Link>
                   </div>
                 </div>
                 
@@ -115,10 +128,33 @@ const Home = () => {
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                     </svg>
                   </button>
-                  <a href="#" className="text-white hover:text-gray-200 hover:underline cursor-pointer text-sm font-medium transition-colors">Login</a>
-                  <a href="#" className="bg-white text-blue-600 hover:bg-gray-100 hover:underline cursor-pointer px-3 py-1.5 rounded-4xl text-sm font-medium transition-colors">
-                    Sign up for free
-                  </a>
+                  
+                  {isLoggedIn ? (
+                    <Link to="/profile" className="flex items-center justify-center w-10 h-10 rounded-full bg-purple-600 hover:bg-purple-700 transition-colors">
+                      {auth.currentUser?.photoURL ? (
+                        <img 
+                          src={auth.currentUser.photoURL} 
+                          alt="Profile" 
+                          className="w-full h-full rounded-full object-cover"
+                          onError={(e) => {
+                            e.target.onerror = null;
+                            e.target.src = `https://ui-avatars.com/api/?name=${auth.currentUser?.displayName || 'User'}&background=7C3AED&color=fff`;
+                          }}
+                        />
+                      ) : (
+                        <span className="text-white font-medium text-lg">
+                          {auth.currentUser?.displayName?.[0]?.toUpperCase() || 'U'}
+                        </span>
+                      )}
+                    </Link>
+                  ) : (
+                    <>
+                      <Link to="/login" className="text-white hover:text-gray-200 hover:underline cursor-pointer text-sm font-medium transition-colors">Login</Link>
+                      <Link to="/login" className="bg-white text-blue-600 hover:bg-gray-100 hover:underline cursor-pointer px-3 py-1.5 rounded-4xl text-sm font-medium transition-colors">
+                        Sign up for free
+                      </Link>
+                    </>
+                  )}
                 </div>
                 
                 {/* Mobile menu button */}
@@ -147,15 +183,41 @@ const Home = () => {
                     : 'opacity-0 scale-y-95 max-h-0 pointer-events-none -mt-4'
                 }`}
               >
-                <a href="#" className="block text-white hover:text-gray-200 hover:underline cursor-pointer py-2 text-base font-medium transition-colors">AI Tools</a>
+                <Link to="/applications" className="block text-white hover:text-gray-200 hover:underline cursor-pointer py-2 text-base font-medium transition-colors" onClick={() => setIsMenuOpen(false)}>AI Tools</Link>
                 <a href="#" className="block text-white hover:text-gray-200 hover:underline cursor-pointer py-2 text-base font-medium transition-colors">AI for Business</a>
-                <a href="#" className="block text-white hover:text-gray-200 hover:underline cursor-pointer py-2 text-base font-medium transition-colors">Newsletter</a>
-                <a href="#" className="block text-white hover:text-gray-200 hover:underline cursor-pointer py-2 text-base font-medium transition-colors">Resources</a>
+                <Link to="/blog" className="block text-white hover:text-gray-200 hover:underline cursor-pointer py-2 text-base font-medium transition-colors" onClick={() => setIsMenuOpen(false)}>Newsletter</Link>
+                <Link to="/learnai" className="block text-white hover:text-gray-200 hover:underline cursor-pointer py-2 text-base font-medium transition-colors" onClick={() => setIsMenuOpen(false)}>Resources</Link>
                 <div className="pt-2 mt-2 border-t border-white/20">
-                  <a href="#" className="block text-white hover:text-gray-200 hover:underline cursor-pointer py-2 text-base font-medium transition-colors">Login</a>
-                  <a href="#" className="inline-block bg-white text-blue-600 hover:bg-gray-100 hover:underline cursor-pointer px-4 py-2 rounded-4xl text-base font-medium transition-colors mt-2">
-                    Sign up for free
-                  </a>
+                  {isLoggedIn ? (
+                    <Link 
+                      to="/profile" 
+                      className="flex items-center justify-center w-10 h-10 rounded-full bg-purple-600 hover:bg-purple-700 transition-colors"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      {auth.currentUser?.photoURL ? (
+                        <img 
+                          src={auth.currentUser.photoURL} 
+                          alt="Profile" 
+                          className="w-full h-full rounded-full object-cover"
+                          onError={(e) => {
+                            e.target.onerror = null;
+                            e.target.src = `https://ui-avatars.com/api/?name=${auth.currentUser?.displayName || 'User'}&background=7C3AED&color=fff`;
+                          }}
+                        />
+                      ) : (
+                        <span className="text-white font-medium text-lg">
+                          {auth.currentUser?.displayName?.[0]?.toUpperCase() || 'U'}
+                        </span>
+                      )}
+                    </Link>
+                  ) : (
+                    <>
+                      <Link to="/login" className="block text-white hover:text-gray-200 hover:underline cursor-pointer py-2 text-base font-medium transition-colors" onClick={() => setIsMenuOpen(false)}>Login</Link>
+                      <Link to="/login" className="inline-block bg-white text-blue-600 hover:bg-gray-100 hover:underline cursor-pointer px-4 py-2 rounded-4xl text-base font-medium transition-colors mt-2">
+                        Sign up for free
+                      </Link>
+                    </>
+                  )}
                 </div>
               </div>
             </div>
