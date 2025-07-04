@@ -24,7 +24,7 @@ const Navbar = () => {
     setIsMenuOpen(false);
   }, [location]);
 
-  const navBackground = 'bg-transparent';
+  const navBackground = 'bg-gray-900/80 backdrop-blur-sm';
   const textColor = 'text-white hover:text-blue-100';
   const mobileTextColor = 'text-white hover:text-blue-100';
 
@@ -43,7 +43,7 @@ const Navbar = () => {
           />
         )}
       </AnimatePresence>
-      <header className={`w-full z-50 ${navBackground} fixed top-0 left-0`}>
+      <header className={`w-full z-50 ${navBackground} fixed top-0 left-0 right-0`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16 md:h-20">
           {/* Logo */}

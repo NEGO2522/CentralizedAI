@@ -14,9 +14,9 @@ import SignUp from './pages/SignUp';
 
 const App = () => {
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-br from-gray-900 to-gray-800">
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 to-gray-800">
       <Navbar />
-      <main className="flex-grow px-4 sm:px-6 lg:px-8 pt-20 md:pt-24">
+      <main className="px-4 sm:px-6 lg:px-8 pt-20 md:pt-24">
         <AnimatePresence mode="wait">
           <Routes>
             <Route path="/" element={<Home />} />
