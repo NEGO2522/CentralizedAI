@@ -2,9 +2,10 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { allAiTools } from '../Data/aiTools';
 import Loader from "../components/Loader";
+import Navbar from "../components/Navbar";
 import { motion, AnimatePresence } from 'framer-motion';
 import { FiSearch, FiExternalLink, FiStar, FiFilter, FiChevronDown, FiX, FiMenu, FiDollarSign } from 'react-icons/fi';
-import { FaRobot, FaChartLine, FaPalette, FaCode, FaBrain, FaSearch, FaMusic, FaGraduationCap, FaGoogle, FaMicrosoft, FaLanguage, FaFilm, FaImage } from 'react-icons/fa';
+import { FaRobot, FaChartLine, FaPalette, FaCode, FaBrain, FaSearch, FaMusic, FaGraduationCap, FaGoogle, FaMicrosoft, FaLanguage, FaFilm, FaImage, FaPencilAlt, FaHeadphones, FaFilePowerpoint, FaPencilRuler } from 'react-icons/fa';
 import { SiOpenai, SiAnthropic, SiAdobe, SiNotion, SiElevenlabs, SiGrammarly, SiQuora, SiHuggingface } from 'react-icons/si';
 import { RiPencilRuler2Line } from 'react-icons/ri';
 import { auth } from '../Firebase/firebase';
@@ -30,16 +31,25 @@ const item = {
 const categoryIcons = {
   'All': <FaRobot className="mr-2" />,
   'Conversational AI': <FaRobot className="mr-2" />,
-  'Image Generation': <FaPalette className="mr-2" />,
-  'Productivity': <FaChartLine className="mr-2" />,
-  'Video AI': <FaCode className="mr-2" />,
-  'Writing Assistant': <FaBrain className="mr-2" />,
-  'Marketing AI': <FaChartLine className="mr-2" />,
+  'Multimodal AI': <FaRobot className="mr-2" />,
   'Search AI': <FaSearch className="mr-2" />,
+  'Image Generation': <FaPalette className="mr-2" />,
+  'Image & Video': <FaFilm className="mr-2" />,
   'Audio Generation': <FaMusic className="mr-2" />,
-  'Design Tools': <FaPalette className="mr-2" />,
+  'Productivity': <FaChartLine className="mr-2" />,
+  'Marketing AI': <FaChartLine className="mr-2" />,
+  'Video AI': <FaFilm className="mr-2" />,
+  'Video Generation': <FaFilm className="mr-2" />,
+  'Translation AI': <FaLanguage className="mr-2" />,
+  'Writing Assistant': <FaPencilAlt className="mr-2" />,
+  'Art AI': <FaPalette className="mr-2" />,
+  'Audio & Video': <FaHeadphones className="mr-2" />,
+  'Presentation AI': <FaFilePowerpoint className="mr-2" />,
+  'Design Tools': <FaPencilRuler className="mr-2" />,
+  'Education': <FaGraduationCap className="mr-2" />,
   'Development': <FaCode className="mr-2" />,
-  'Education': <FaGraduationCap className="mr-2" />
+  'Business': <FaChartLine className="mr-2" />,
+  'Creative': <FaPalette className="mr-2" />,
 };
 
 // Loading Skeleton Component
@@ -78,16 +88,16 @@ const Applications = () => {
   const navigate = useNavigate();
 
   // Group tools by category
-  const toolsByCategory = React.useMemo(() => 
-    allAiTools.reduce((acc, tool) => {
-      if (!acc[tool.category]) {
-        acc[tool.category] = [];
+  const toolsByCategory = React.useMemo(() => {
+    const categories = {};
+    allAiTools.forEach(tool => {
+      if (!categories[tool.category]) {
+        categories[tool.category] = [];
       }
-      acc[tool.category].push(tool);
-      return acc;
-    }, {}),
-    []
-  );
+      categories[tool.category].push(tool);
+    });
+    return categories;
+  }, [allAiTools]);
 
   // Get all categories with counts
   const categories = React.useMemo(() => {
@@ -147,27 +157,42 @@ const Applications = () => {
     return () => clearTimeout(timer);
   }, []);
 
-  // Logo mapping for AI tools
-  const getToolLogo = (toolName) => {
-    const logoMap = {
-      'ChatGPT': <SiOpenai className="w-8 h-8 text-[#10A37F]" />,
-      'Google Gemini': <FaGoogle className="w-8 h-8 text-[#4285F4]" />,
-      'Claude': <SiAnthropic className="w-8 h-8 text-[#F0B528]" />,
-      'Midjourney': <div className="w-8 h-8 bg-black rounded-full flex items-center justify-center"><span className="text-white font-bold text-xs">MJ</span></div>,
-      'Stable Diffusion': <FaImage className="w-8 h-8 text-[#00A67E]" />,
-      'Adobe Firefly': <SiAdobe className="w-8 h-8 text-[#FF0000]" />,
-      'Notion AI': <SiNotion className="w-8 h-8 text-black dark:text-white" />,
-      'Jasper': <FaRobot className="w-8 h-8 text-[#10A37F]" />,
-      'ElevenLabs': <SiElevenlabs className="w-8 h-8" />,
-      'Runway ML': <FaFilm className="w-8 h-8 text-[#4285F4]" />,
-      'DeepL': <FaLanguage className="w-8 h-8 text-[#0F2B46]" />,
-      'Grammarly': <SiGrammarly className="w-8 h-8 text-[#15C39A]" />,
-      'QuillBot': <SiQuora className="w-8 h-8 text-[#B4151E]" />,
-      'Hugging Face': <SiHuggingface className="w-8 h-8 text-[#FFD21E]" />,
-      'Microsoft Copilot': <FaMicrosoft className="w-8 h-8 text-[#0078D4]" />,
+  // Get tool logo URL using Clearbit
+  const getToolLogo = (toolName, size = 40) => {
+    // Map of tool names to their respective domains for Clearbit
+    const toolDomains = {
+      'ChatGPT': 'openai.com',
+      'Claude': 'anthropic.com',
+      'Midjourney': 'midjourney.com',
+      'DALL-E': 'openai.com/dall-e',
+      'Stable Diffusion': 'stability.ai',
+      'GitHub Copilot': 'github.com',
+      'Notion AI': 'notion.so',
+      'ElevenLabs': 'elevenlabs.io',
+      'Grammarly': 'grammarly.com',
+      'Runway': 'runwayml.com',
+      'Jasper': 'jasper.ai',
+      'Quillbot': 'quillbot.com',
+      'Hugging Face': 'huggingface.co',
+      'Firefly': 'adobe.com',
+      'Bard': 'google.com',
+      'Bing Chat': 'bing.com',
+      'DeepL': 'deepl.com',
+      'Synthesia': 'synthesia.io',
+      'Tome': 'tome.app',
+      'Canva': 'canva.com',
+      'Microsoft Copilot': 'microsoft.com',
+      'Google Gemini': 'google.com',
+      'Runway ML': 'runwayml.com'
     };
 
-    return logoMap[toolName] || <RiPencilRuler2Line className="w-8 h-8 text-gray-600 dark:text-gray-300" />;
+    // Find matching domain or use tool name for fallback
+    const domain = Object.entries(toolDomains).find(([key]) => 
+      toolName.toLowerCase().includes(key.toLowerCase())
+    )?.[1] || toolName.toLowerCase().replace(/\s+/g, '') + '.com';
+
+    // Return Clearbit URL with fallback to UI Avatars if needed
+    return `https://logo.clearbit.com/${domain}?size=${size}`;
   };
 
   // Tool Card Component
@@ -178,19 +203,18 @@ const Applications = () => {
         className="group relative bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 border border-gray-100 dark:border-gray-700 flex flex-col h-full"
         whileHover={{ y: -5 }}
       >
-        <div className="relative h-48 overflow-hidden mb-4 rounded-lg bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-700 dark:to-gray-800 p-4 flex items-center justify-center">
-          <div className="absolute top-4 left-4 z-10">
-            {getToolLogo(tool.name)}
-          </div>
+        <div className="relative h-48 overflow-hidden mb-4 rounded-lg bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-700 dark:to-gray-800 p-4">
+          <div className="absolute inset-0 flex items-center justify-center p-4">
             <img
-              src={`https://logo.clearbit.com/${new URL(tool.link).hostname.replace('www.', '')}?size=200`}
+              src={getToolLogo(tool.name, 120)}
               alt={tool.name}
               className="w-full h-full object-contain transition-transform duration-500 group-hover:scale-105"
               onError={(e) => {
-                e.target.src = 'https://ui-avatars.com/api/?name=' + encodeURIComponent(tool.name) + '&background=random&size=200';
-                e.target.className = 'w-full h-full object-cover transition-transform duration-500 group-hover:scale-110';
+                e.target.onerror = null;
+                e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(tool.name)}&background=random&size=120`;
               }}
             />
+          </div>
           <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-5">
             <div className="flex flex-wrap gap-2">
               <span className="inline-flex items-center px-3 py-1 text-xs font-semibold text-white bg-blue-600/90 backdrop-blur-sm rounded-full">
@@ -250,12 +274,14 @@ const Applications = () => {
 
   // Main component render
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-blue-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 transition-colors duration-300">
-      <main className="pt-20 pb-20 px-4 sm:px-6">
-        <div className="max-w-7xl mx-auto">
-          {/* Hero Section */}
-          <motion.div 
-            className="text-center mb-16"
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+      <Navbar isMenuOpen={isMenuOpen} setIsMenuOpen={setIsMenuOpen} isLoggedIn={isLoggedIn} />
+      
+      <div className="container mx-auto px-4 py-12">
+        {/* Hero Section */}
+        {!isScrolled && (
+          <motion.div
+            className="text-center mb-12"
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
@@ -270,123 +296,198 @@ const Applications = () => {
               Find the perfect AI tools to supercharge your workflow and boost productivity
             </p>
           </motion.div>
+        )}
 
-          {/* Search and Filter Section */}
-          <motion.div 
-            className="sticky top-4 z-10 mb-8 transition-all duration-300 px-4 py-2 -mx-4 bg-white/80 dark:bg-gray-800/80 backdrop-blur-md rounded-xl shadow-lg"
-            initial={false}
-            animate={{ 
-              y: isScrolled ? 0 : 0,
-              scale: isScrolled ? 0.98 : 1,
-              transition: { type: 'spring', stiffness: 300, damping: 30 }
-            }}
-          >
-            <div className="relative max-w-lg group">
-              <div className="absolute -inset-0.5 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl opacity-70 group-hover:opacity-100 blur transition duration-300"></div>
-              <div className="relative">
-                <input
-                  type="text"
-                  placeholder="Search AI tools..."
-                  className="w-full px-6 py-4 rounded-xl border-0 bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-white dark:focus:ring-offset-gray-900 transition-all duration-200 shadow-lg"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                />
-                <FiSearch className="absolute right-5 top-1/2 transform -translate-y-1/2 text-gray-500 dark:text-gray-400 text-xl" />
+        <div className="flex flex-col lg:flex-row gap-8">
+          {/* Sidebar */}
+          <div className="w-full lg:w-64 flex-shrink-0">
+            <div className="sticky top-24 bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Categories</h3>
+              <div className="space-y-2">
+                {['All', ...Object.entries(toolsByCategory)
+                  .sort(([catA], [catB]) => catA.localeCompare(catB))
+                  .map(([category]) => category)]
+                  .map((category) => (
+                    <button
+                      key={category}
+                      className={`w-full flex items-center justify-between px-4 py-3 rounded-lg text-left transition-all duration-200 ${
+                        selectedCategory === category
+                          ? 'bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/30 dark:to-purple-900/30 text-blue-600 dark:text-blue-400 font-medium'
+                          : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700/50'
+                      }`}
+                      onClick={() => {
+                        setSelectedCategory(category);
+                        setSearchQuery('');
+                      }}
+                    >
+                      <div className="flex items-center">
+                        <span className="mr-3">
+                          {categoryIcons[category] || categoryIcons['All']}
+                        </span>
+                        <span>{category}</span>
+                      </div>
+                      <span className="text-xs bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 px-2 py-1 rounded-full">
+                        {category === 'All' 
+                          ? allAiTools.length 
+                          : (toolsByCategory[category] || []).length}
+                      </span>
+                    </button>
+                  ))}
               </div>
             </div>
-            <div className="flex flex-wrap gap-3 mt-6">
-              {['All', 'Productivity', 'Creative', 'Development', 'Business'].map((category) => (
-                <button
-                  key={category}
-                  className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 ${
-                    selectedCategory === category
-                      ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-md'
-                      : 'bg-white/80 dark:bg-gray-800/80 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700/80'
-                  }`}
-                  onClick={() => {
-                setSelectedCategory(category);
-                setSearchQuery('');
+          </div>
+
+          {/* Main Content */}
+          <div className="flex-1">
+            {/* Search Bar */}
+            <motion.div 
+              className="sticky top-4 z-10 mb-8 transition-all duration-300"
+              initial={false}
+              animate={{ 
+                y: isScrolled ? 0 : 0,
+                scale: isScrolled ? 0.98 : 1,
+                transition: { type: 'spring', stiffness: 300, damping: 30 }
               }}
-                >
-                  {category}
-                </button>
-              ))}
-            </div>
-          </motion.div>
-
-          {/* AI Tools Grid */}
-          {loading ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-              {[...Array(6)].map((_, index) => (
-                <motion.div 
-                  key={index} 
-                  className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl overflow-hidden hover:shadow-2xl transition-all duration-300 border border-gray-100 dark:border-gray-700"
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.3, delay: index * 0.05 }}
-                >
-                  <div className="h-48 bg-gradient-to-r from-gray-200 to-gray-300 dark:from-gray-700 dark:to-gray-600 animate-pulse"></div>
-                  <div className="p-6">
-                    <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded-full w-3/4 mb-4 animate-pulse"></div>
-                    <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded-full w-1/2 mb-6 animate-pulse"></div>
-                    <div className="space-y-2">
-                      <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded-full w-full animate-pulse"></div>
-                      <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded-full w-5/6 animate-pulse"></div>
-                    </div>
-                    <div className="mt-6 h-10 bg-gray-200 dark:bg-gray-700 rounded-lg animate-pulse"></div>
-                  </div>
-                </motion.div>
-              ))}
-            </div>
-          ) : filteredTools.length === 0 ? (
-            <motion.div 
-              className="text-center py-20 px-4"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.5 }}
             >
-              <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-blue-50 dark:bg-blue-900/30 mb-6">
-                <FiSearch className="h-10 w-10 text-blue-500 dark:text-blue-400" />
+              <div className="relative group">
+                <div className="absolute -inset-0.5 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl opacity-70 group-hover:opacity-100 blur transition duration-300"></div>
+                <div className="relative">
+                  <input
+                    type="text"
+                    placeholder="Search AI tools..."
+                    className="w-full px-6 py-4 rounded-xl border-0 bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-white dark:focus:ring-offset-gray-900 transition-all duration-200 shadow-lg"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                  />
+                  <FiSearch className="absolute right-5 top-1/2 transform -translate-y-1/2 text-gray-500 dark:text-gray-400 text-xl" />
+                </div>
               </div>
-              <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">No tools found</h3>
-              <p className="text-gray-500 dark:text-gray-400 max-w-md mx-auto">
-                We couldn't find any tools matching your search. Try adjusting your filters or search term.
-              </p>
-              <button 
-                onClick={() => {
-                  setSearchQuery('');
-                  setSelectedCategory('All');
-                }}
-                className="mt-6 px-6 py-2.5 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-medium rounded-lg shadow-md hover:shadow-lg transition-all duration-200"
-              >
-                Reset Filters
-              </button>
             </motion.div>
-          ) : (
-            <motion.div 
-              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8"
-              layout
-            >
-              <AnimatePresence>
+
+            {/* AI Tools Grid */}
+            {loading ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+                {[...Array(6)].map((_, index) => (
+                  <motion.div 
+                    key={index} 
+                    className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl overflow-hidden hover:shadow-2xl transition-all duration-300 border border-gray-100 dark:border-gray-700"
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.3, delay: index * 0.1 }}
+                  >
+                    <div className="p-6">
+                      <div className="animate-pulse">
+                        <div className="h-48 bg-gray-200 dark:bg-gray-700 rounded-lg mb-4"></div>
+                        <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded w-3/4 mb-2"></div>
+                        <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/2 mb-4"></div>
+                        <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-full mb-2"></div>
+                        <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-5/6"></div>
+                      </div>
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+            ) : filteredTools.length > 0 ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
                 {filteredTools.map((tool, index) => (
                   <motion.div
                     key={tool.id}
+                    className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl overflow-hidden hover:shadow-2xl transition-all duration-300 border border-gray-100 dark:border-gray-700"
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -20 }}
                     transition={{ duration: 0.3, delay: index * 0.05 }}
-                    layout
+                    whileHover={{ y: -5 }}
                   >
-                    <ToolCard tool={tool} />
+                    <div className="p-6">
+                      <div className="flex items-center justify-between mb-4">
+                        <div className="flex items-center">
+                          <div className="flex-shrink-0 w-10 h-10 rounded-lg overflow-hidden bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 flex items-center justify-center mr-3 shadow-sm">
+                            <img 
+                              src={getToolLogo(tool.name, 40)} 
+                              alt={tool.name}
+                              className="w-5/6 h-5/6 object-contain"
+                              onError={(e) => {
+                                // Fallback to initial letter if image fails to load
+                                e.target.onerror = null;
+                                e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(tool.name)}&background=random&size=40`;
+                              }}
+                            />
+                          </div>
+                          <div>
+                            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                              {tool.name}
+                            </h3>
+                            <div className="flex items-center text-sm text-gray-500 dark:text-gray-400">
+                              {categoryIcons[tool.category] || categoryIcons['All']}
+                              <span className="ml-1">{tool.category}</span>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="flex items-center">
+                          <FiStar className="text-yellow-400" />
+                          <span className="ml-1 text-sm font-medium text-gray-700 dark:text-gray-300">
+                            {tool.rating}
+                          </span>
+                        </div>
+                      </div>
+                      <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
+                        {tool.name}
+                      </h3>
+                      <p className="text-gray-600 dark:text-gray-300 mb-4 line-clamp-3">
+                        {tool.description}
+                      </p>
+                      <div className="flex flex-wrap gap-2 mb-4">
+                        {tool.tags?.slice(0, 3).map((tag) => (
+                          <span 
+                            key={tag} 
+                            className="px-2 py-1 text-xs font-medium rounded-full bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300"
+                          >
+                            {tag}
+                          </span>
+                        ))}
+                        {tool.tags?.length > 3 && (
+                          <span className="px-2 py-1 text-xs font-medium text-gray-500">
+                            +{tool.tags.length - 3} more
+                          </span>
+                        )}
+                      </div>
+                      <a
+                        href={tool.link}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center text-blue-600 dark:text-blue-400 hover:underline font-medium text-sm"
+                      >
+                        Visit Website
+                        <FiExternalLink className="ml-1.5" />
+                      </a>
+                    </div>
                   </motion.div>
                 ))}
-              </AnimatePresence>
-            </motion.div>
-          )}
+              </div>
+            ) : (
+              <div className="text-center py-16">
+                <FiSearch className="mx-auto h-12 w-12 text-gray-400" />
+                <h3 className="mt-2 text-lg font-medium text-gray-900 dark:text-white">No tools found</h3>
+                <p className="mt-1 text-gray-500 dark:text-gray-400">
+                  Try adjusting your search or filter to find what you're looking for.
+                </p>
+                <button
+                  onClick={() => {
+                    setSearchQuery('');
+                    setSelectedCategory('All');
+                  }}
+                  className="mt-4 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                >
+                  <FiRefreshCw className="mr-2 -ml-1 h-4 w-4" />
+                  Reset filters
+                </button>
+              </div>
+            )}
+          </div>
         </div>
-      </main>
+      </div>
     </div>
   );
-};
+}
 
 export default Applications;

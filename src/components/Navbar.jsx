@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import React, { useState, useEffect, useRef } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FiMenu, FiX } from 'react-icons/fi';
 import { auth } from '../Firebase/firebase';
@@ -8,7 +8,18 @@ const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const dropdownRef = useRef(null);
   const location = useLocation();
+  const navigate = useNavigate();
+  
+  // Protected navigation handler
+  const handleProtectedNav = (e, path) => {
+    if (!isLoggedIn) {
+      e.preventDefault();
+      navigate('/login', { state: { from: path } });
+    }
+  };
 
   // Check auth state on component mount
   useEffect(() => {
@@ -23,6 +34,19 @@ const Navbar = () => {
   useEffect(() => {
     setIsMenuOpen(false);
   }, [location]);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsProfileOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
   const navBackground = 'bg-gray-900/80 backdrop-blur-sm';
   const textColor = 'text-white hover:text-blue-100';
@@ -55,16 +79,25 @@ const Navbar = () => {
           
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center space-x-8">
-            <Link to="/applications" className={`${textColor} text-sm font-medium transition-colors`}>
+            <Link 
+              to="/applications" 
+              className={`${textColor} text-sm font-medium transition-colors`}
+              onClick={(e) => handleProtectedNav(e, '/applications')}
+            >
               AI Tools
             </Link>
-            <Link to="/#features" className={`${textColor} text-sm font-medium transition-colors`}>
-              Features
-            </Link>
-            <Link to="/blog" className={`${textColor} text-sm font-medium transition-colors`}>
+            <Link 
+              to="/blog" 
+              className={`${textColor} text-sm font-medium transition-colors`}
+              onClick={(e) => handleProtectedNav(e, '/blog')}
+            >
               Blog
             </Link>
-            <Link to="/learnai" className={`${textColor} text-sm font-medium transition-colors`}>
+            <Link 
+              to="/learnai" 
+              className={`${textColor} text-sm font-medium transition-colors`}
+              onClick={(e) => handleProtectedNav(e, '/learnai')}
+            >
               Resources
             </Link>
           </nav>
@@ -72,12 +105,33 @@ const Navbar = () => {
           {/* Auth Buttons */}
           <div className="hidden md:flex items-center space-x-4">
             {isLoggedIn ? (
-              <Link 
-                to="/profile" 
-                className="flex items-center justify-center w-10 h-10 rounded-full bg-blue-600 hover:bg-blue-700 transition-colors text-white"
-              >
-                {auth.currentUser?.displayName?.[0]?.toUpperCase() || 'U'}
-              </Link>
+              <div className="relative" ref={dropdownRef}>
+                <button 
+                  onClick={() => setIsProfileOpen(!isProfileOpen)}
+                  className="flex items-center justify-center w-10 h-10 rounded-full bg-blue-600 hover:bg-blue-700 transition-colors text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                >
+                  {auth.currentUser?.displayName?.[0]?.toUpperCase() || 'U'}
+                </button>
+                
+                {/* Dropdown Menu */}
+                {isProfileOpen && (
+                  <div className="absolute right-0 mt-2 w-48 bg-gray-800 rounded-md shadow-lg py-1 z-50">
+                    <div className="px-4 py-2 text-sm text-gray-200 border-b border-gray-700">
+                      <p className="font-medium">{auth.currentUser?.displayName || 'User'}</p>
+                      <p className="text-xs text-gray-400 truncate">{auth.currentUser?.email}</p>
+                    </div>
+                    <button
+                      onClick={() => {
+                        auth.signOut();
+                        setIsProfileOpen(false);
+                      }}
+                      className="w-full text-left px-4 py-2 text-sm text-red-400 hover:bg-gray-700"
+                    >
+                      Sign Out
+                    </button>
+                  </div>
+                )}
+              </div>
             ) : (
               <div className="flex items-center space-x-3">
                 <Link 
@@ -96,18 +150,83 @@ const Navbar = () => {
             )}
           </div>
           
-          {/* Mobile Menu Button */}
-          <button 
-            onClick={() => setIsMenuOpen(!isMenuOpen)}
-            className="md:hidden p-2 focus:outline-none"
-            aria-label="Toggle menu"
-          >
-            {isMenuOpen ? (
-              <FiX className="h-6 w-6 text-white" />
-            ) : (
-              <FiMenu className="h-6 w-6 text-white" />
+          {/* Mobile Menu */}
+          <div className="md:hidden">
+            <button
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+              className="text-gray-300 hover:text-white focus:outline-none"
+            >
+              {isMenuOpen ? (
+                <FiX className="h-6 w-6" />
+              ) : (
+                <FiMenu className="h-6 w-6" />
+              )}
+            </button>
+          </div>
+          
+          {/* Mobile Menu Dropdown */}
+          <AnimatePresence>
+            {isMenuOpen && (
+              <motion.div 
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                transition={{ duration: 0.2 }}
+                className="md:hidden absolute top-16 left-0 right-0 bg-gray-800 shadow-lg z-40"
+              >
+                <div className="px-2 pt-2 pb-3 space-y-1">
+                  <Link
+                    to="/applications"
+                    onClick={(e) => {
+                      handleProtectedNav(e, '/applications');
+                      setIsMenuOpen(false);
+                    }}
+                    className="block px-3 py-2 rounded-md text-base font-medium text-gray-300 hover:bg-gray-700"
+                  >
+                    AI Tools
+                  </Link>
+                  <Link
+                    to="/blog"
+                    onClick={(e) => {
+                      handleProtectedNav(e, '/blog');
+                      setIsMenuOpen(false);
+                    }}
+                    className="block px-3 py-2 rounded-md text-base font-medium text-gray-300 hover:bg-gray-700"
+                  >
+                    Blog
+                  </Link>
+                  <Link
+                    to="/learnai"
+                    onClick={(e) => {
+                      handleProtectedNav(e, '/learnai');
+                      setIsMenuOpen(false);
+                    }}
+                    className="block px-3 py-2 rounded-md text-base font-medium text-gray-300 hover:bg-gray-700"
+                  >
+                    Resources
+                  </Link>
+                  {!isLoggedIn && (
+                    <>
+                      <Link
+                        to="/login"
+                        onClick={() => setIsMenuOpen(false)}
+                        className="block px-3 py-2 rounded-md text-base font-medium text-blue-400 hover:bg-gray-700"
+                      >
+                        Login
+                      </Link>
+                      <Link
+                        to="/signup"
+                        onClick={() => setIsMenuOpen(false)}
+                        className="block px-3 py-2 rounded-md text-base font-medium text-white bg-blue-600 hover:bg-blue-700"
+                      >
+                        Sign Up
+                      </Link>
+                    </>
+                  )}
+                </div>
+              </motion.div>
             )}
-          </button>
+          </AnimatePresence>
         </div>
       </div>
       
@@ -123,7 +242,6 @@ const Navbar = () => {
           >
             <div className="px-4 py-3 space-y-4">
               <Link to="/applications" className={`block ${mobileTextColor} py-2`}>AI Tools</Link>
-              <Link to="/#features" className={`block ${mobileTextColor} py-2`}>Features</Link>
               <Link to="/blog" className={`block ${mobileTextColor} py-2`}>Blog</Link>
               <Link to="/learnai" className={`block ${mobileTextColor} py-2`}>Resources</Link>
               <div className="pt-2 mt-2 border-t border-gray-200">

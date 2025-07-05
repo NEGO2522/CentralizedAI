@@ -3,6 +3,8 @@ import { Link } from 'react-router-dom';
 import Loader from '../components/Loader';
 import { motion } from 'framer-motion';
 import { FiArrowRight, FiSearch, FiClock, FiAward } from 'react-icons/fi';
+import { auth } from '../Firebase/firebase';
+import { onAuthStateChanged } from 'firebase/auth';
 
 const ParticleBackground = () => {
   const canvasRef = useRef(null);
@@ -71,10 +73,20 @@ const ParticleBackground = () => {
 
 const Home = () => {
   const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState(null);
 
   useEffect(() => {
     const timer = setTimeout(() => setLoading(false), 1000);
-    return () => clearTimeout(timer);
+    
+    // Set up auth state listener
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      setUser(currentUser);
+    });
+    
+    return () => {
+      clearTimeout(timer);
+      unsubscribe();
+    };
   }, []);
 
   if (loading) return <Loader />;
@@ -248,36 +260,231 @@ const Home = () => {
       </section>
 
       {/* CTA Section */}
-      <section className="py-20 bg-gradient-to-r from-blue-900/30 to-purple-900/30">
-        <div className="container mx-auto px-4 text-center">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6 }}
-          >
-            <h2 className="text-3xl md:text-4xl font-bold mb-6">Ready to Get Started?</h2>
-            <p className="text-xl text-gray-300 max-w-2xl mx-auto mb-8">
-              Join thousands of developers and businesses already using our platform
-            </p>
-            <div className="flex flex-col sm:flex-row justify-center gap-4">
-              <Link
-                to="/signup"
-                className="bg-white text-gray-900 hover:bg-gray-100 font-semibold rounded-full px-8 py-3 text-lg transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-blue-500/20 flex items-center justify-center space-x-2"
+      {!user && (
+        <section className="py-20 bg-gradient-to-r from-blue-900/30 to-purple-900/30">
+          <div className="container mx-auto px-4 text-center">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6 }}
+            >
+              <h2 className="text-3xl md:text-4xl font-bold mb-6">Ready to Get Started?</h2>
+              <p className="text-xl text-gray-300 max-w-2xl mx-auto mb-8">
+                Join thousands of developers and businesses already using our platform
+              </p>
+              <div className="flex flex-col sm:flex-row justify-center gap-4">
+                <Link
+                  to="/signup"
+                  className="bg-white text-gray-900 hover:bg-gray-100 font-semibold rounded-full px-8 py-3 text-lg transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-blue-500/20 flex items-center justify-center space-x-2"
+                >
+                  <span>Create Free Account</span>
+                  <FiArrowRight className="h-5 w-5" />
+                </Link>
+              </div>
+            </motion.div>
+          </div>
+        </section>
+      )}
+      
+      {user && (
+        <>
+          <section className="py-20 bg-gradient-to-r from-blue-900/30 to-purple-900/30">
+            <div className="container mx-auto px-4 text-center">
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.6 }}
               >
-                <span>Create Free Account</span>
-                <FiArrowRight className="h-5 w-5" />
-              </Link>
-              <Link
-                to="/contact"
-                className="bg-transparent border-2 border-white text-white hover:bg-white/10 font-medium rounded-full px-8 py-3 text-lg transition-colors duration-300 flex items-center justify-center space-x-2"
-              >
-                <span>Contact Sales</span>
-              </Link>
+                <h2 className="text-3xl md:text-4xl font-bold mb-6">Start Exploring AI Tools</h2>
+                <p className="text-xl text-gray-300 max-w-2xl mx-auto mb-8">
+                  Discover our curated collection of AI applications to boost your productivity
+                </p>
+                <div className="flex flex-col sm:flex-row justify-center gap-4">
+                  <Link
+                    to="/applications"
+                    className="bg-white text-gray-900 hover:bg-gray-100 font-semibold rounded-full px-8 py-3 text-lg transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-blue-500/20 flex items-center justify-center space-x-2"
+                  >
+                    <span>Explore AI Tools</span>
+                    <FiArrowRight className="h-5 w-5" />
+                  </Link>
+                </div>
+              </motion.div>
             </div>
-          </motion.div>
-        </div>
-      </section>
+          </section>
+
+          {/* AI Tools Section */}
+          <section className="py-20 bg-gray-900">
+            <div className="container mx-auto px-4">
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.6 }}
+                className="text-center mb-12"
+              >
+                <h2 className="text-3xl md:text-4xl font-bold mb-4">Popular AI Tools</h2>
+                <p className="text-xl text-gray-400 max-w-2xl mx-auto">
+                  Explore some of the most powerful AI tools available today
+                </p>
+              </motion.div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                {/* ChatGPT Card */}
+                <motion.div
+                  whileHover={{ y: -5 }}
+                  className="bg-gray-800/50 backdrop-blur-sm rounded-2xl overflow-hidden border border-gray-700/50 hover:border-blue-500/50 transition-all duration-300"
+                >
+                  <div className="p-6">
+                    <div className="flex items-center mb-4">
+                      <div className="bg-white p-2 rounded-lg mr-4">
+                        <img src="https://upload.wikimedia.org/wikipedia/commons/0/04/ChatGPT_logo.svg" alt="ChatGPT" className="h-10 w-10" />
+                      </div>
+                      <h3 className="text-xl font-semibold text-white">ChatGPT</h3>
+                    </div>
+                    <p className="text-gray-400 mb-4">Advanced AI language model by OpenAI that can understand and generate human-like text.</p>
+                    <a 
+                      href="https://chat.openai.com" 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center text-blue-400 hover:text-blue-300 font-medium"
+                    >
+                      Visit ChatGPT
+                      <FiArrowRight className="ml-2" />
+                    </a>
+                  </div>
+                </motion.div>
+
+                {/* Cursor Card */}
+                <motion.div
+                  whileHover={{ y: -5 }}
+                  className="bg-gray-800/50 backdrop-blur-sm rounded-2xl overflow-hidden border border-gray-700/50 hover:border-purple-500/50 transition-all duration-300"
+                >
+                  <div className="p-6">
+                    <div className="flex items-center mb-4">
+                      <div className="bg-black p-2 rounded-lg mr-4">
+                        <img src="https://www.cursor.com/favicon.ico" alt="Cursor" className="h-10 w-10" />
+                      </div>
+                      <h3 className="text-xl font-semibold text-white">Cursor</h3>
+                    </div>
+                    <p className="text-gray-400 mb-4">The AI-first code editor that helps you write better code, faster, with AI assistance.</p>
+                    <a 
+                      href="https://www.cursor.com" 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center text-purple-400 hover:text-purple-300 font-medium"
+                    >
+                      Explore Cursor
+                      <FiArrowRight className="ml-2" />
+                    </a>
+                  </div>
+                </motion.div>
+
+                {/* Windsurf Card */}
+                <motion.div
+                  whileHover={{ y: -5 }}
+                  className="bg-gray-800/50 backdrop-blur-sm rounded-2xl overflow-hidden border border-gray-700/50 hover:border-green-500/50 transition-all duration-300"
+                >
+                  <div className="p-6">
+                    <div className="flex items-center mb-4">
+                      <div className="bg-white p-2 rounded-lg mr-4">
+                        <img src="https://www.windsurf.com/favicon.ico" alt="Windsurf" className="h-10 w-10" />
+                      </div>
+                      <h3 className="text-xl font-semibold text-white">Windsurf</h3>
+                    </div>
+                    <p className="text-gray-400 mb-4">Powerful AI platform for building and deploying machine learning models at scale.</p>
+                    <a 
+                      href="https://www.windsurf.com" 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center text-green-400 hover:text-green-300 font-medium"
+                    >
+                      Discover Windsurf
+                      <FiArrowRight className="ml-2" />
+                    </a>
+                  </div>
+                </motion.div>
+
+                {/* Groq Card */}
+                <motion.div
+                  whileHover={{ y: -5 }}
+                  className="bg-gray-800/50 backdrop-blur-sm rounded-2xl overflow-hidden border border-gray-700/50 hover:border-red-500/50 transition-all duration-300"
+                >
+                  <div className="p-6">
+                    <div className="flex items-center mb-4">
+                      <div className="bg-black p-2 rounded-lg mr-4">
+                        <img src="https://groq.com/favicon.ico" alt="Groq" className="h-10 w-10" />
+                      </div>
+                      <h3 className="text-xl font-semibold text-white">Groq</h3>
+                    </div>
+                    <p className="text-gray-400 mb-4">AI acceleration platform that delivers unprecedented performance for machine learning workloads.</p>
+                    <a 
+                      href="https://groq.com" 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center text-red-400 hover:text-red-300 font-medium"
+                    >
+                      Check out Groq
+                      <FiArrowRight className="ml-2" />
+                    </a>
+                  </div>
+                </motion.div>
+
+                {/* Midjourney Card */}
+                <motion.div
+                  whileHover={{ y: -5 }}
+                  className="bg-gray-800/50 backdrop-blur-sm rounded-2xl overflow-hidden border border-gray-700/50 hover:border-yellow-500/50 transition-all duration-300"
+                >
+                  <div className="p-6">
+                    <div className="flex items-center mb-4">
+                      <div className="bg-black p-2 rounded-lg mr-4 flex items-center justify-center w-12 h-12">
+                        <div className="text-green-400 font-bold text-2xl">MJ</div>
+                      </div>
+                      <h3 className="text-xl font-semibold text-white">Midjourney</h3>
+                    </div>
+                    <p className="text-gray-400 mb-4">AI-powered image generation tool that creates stunning visuals from text descriptions.</p>
+                    <a 
+                      href="https://www.midjourney.com" 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center text-yellow-400 hover:text-yellow-300 font-medium"
+                    >
+                      Try Midjourney
+                      <FiArrowRight className="ml-2" />
+                    </a>
+                  </div>
+                </motion.div>
+
+                {/* Claude Card */}
+                <motion.div
+                  whileHover={{ y: -5 }}
+                  className="bg-gray-800/50 backdrop-blur-sm rounded-2xl overflow-hidden border border-gray-700/50 hover:border-orange-500/50 transition-all duration-300"
+                >
+                  <div className="p-6">
+                    <div className="flex items-center mb-4">
+                      <div className="bg-white p-2 rounded-lg mr-4">
+                        <img src="https://www.anthropic.com/favicon.ico" alt="Claude" className="h-10 w-10" />
+                      </div>
+                      <h3 className="text-xl font-semibold text-white">Claude</h3>
+                    </div>
+                    <p className="text-gray-400 mb-4">AI assistant focused on being helpful, harmless, and honest in conversations.</p>
+                    <a 
+                      href="https://www.anthropic.com/claude" 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center text-orange-400 hover:text-orange-300 font-medium"
+                    >
+                      Meet Claude
+                      <FiArrowRight className="ml-2" />
+                    </a>
+                  </div>
+                </motion.div>
+              </div>
+            </div>
+          </section>
+        </>
+      )}
     </div>
   );
 };
