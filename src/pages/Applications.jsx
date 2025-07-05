@@ -4,7 +4,9 @@ import { allAiTools } from '../Data/aiTools';
 import Loader from "../components/Loader";
 import { motion, AnimatePresence } from 'framer-motion';
 import { FiSearch, FiExternalLink, FiStar, FiFilter, FiChevronDown, FiX, FiMenu, FiDollarSign } from 'react-icons/fi';
-import { FaRobot, FaChartLine, FaPalette, FaCode, FaBrain, FaSearch, FaMusic, FaGraduationCap } from 'react-icons/fa';
+import { FaRobot, FaChartLine, FaPalette, FaCode, FaBrain, FaSearch, FaMusic, FaGraduationCap, FaGoogle, FaMicrosoft, FaLanguage, FaFilm, FaImage } from 'react-icons/fa';
+import { SiOpenai, SiAnthropic, SiAdobe, SiNotion, SiElevenlabs, SiGrammarly, SiQuora, SiHuggingface } from 'react-icons/si';
+import { RiPencilRuler2Line } from 'react-icons/ri';
 import { auth } from '../Firebase/firebase';
 import { onAuthStateChanged } from 'firebase/auth';
 
@@ -64,6 +66,7 @@ const LoadingSkeleton = () => (
 const Applications = () => {
   // State management
   const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [filteredTools, setFilteredTools] = useState([]);
@@ -113,23 +116,21 @@ const Applications = () => {
     };
   }, []);
 
-  // Filter tools based on search and category
+  // Filter tools based on search query and category
   useEffect(() => {
     let results = [];
     
     // Get tools based on selected category
     if (selectedCategory === 'All') {
-      // Get first 6 tools from each category
-      Object.values(toolsByCategory).forEach(categoryTools => {
-        results.push(...categoryTools.slice(0, 6));
-      });
+      // Get all tools
+      results = [...allAiTools];
     } else {
       results = [...(toolsByCategory[selectedCategory] || [])];
     }
     
-    // Filter by search term
-    if (searchTerm) {
-      const searchLower = searchTerm.toLowerCase();
+    // Filter by search query
+    if (searchQuery) {
+      const searchLower = searchQuery.toLowerCase();
       results = results.filter(tool =>
         tool.name.toLowerCase().includes(searchLower) ||
         tool.description.toLowerCase().includes(searchLower) ||
@@ -138,13 +139,36 @@ const Applications = () => {
     }
     
     setFilteredTools(results);
-  }, [searchTerm, selectedCategory, toolsByCategory]);
+  }, [searchQuery, selectedCategory, toolsByCategory]);
 
   // Simulate loading
   useEffect(() => {
     const timer = setTimeout(() => setLoading(false), 800);
     return () => clearTimeout(timer);
   }, []);
+
+  // Logo mapping for AI tools
+  const getToolLogo = (toolName) => {
+    const logoMap = {
+      'ChatGPT': <SiOpenai className="w-8 h-8 text-[#10A37F]" />,
+      'Google Gemini': <FaGoogle className="w-8 h-8 text-[#4285F4]" />,
+      'Claude': <SiAnthropic className="w-8 h-8 text-[#F0B528]" />,
+      'Midjourney': <div className="w-8 h-8 bg-black rounded-full flex items-center justify-center"><span className="text-white font-bold text-xs">MJ</span></div>,
+      'Stable Diffusion': <FaImage className="w-8 h-8 text-[#00A67E]" />,
+      'Adobe Firefly': <SiAdobe className="w-8 h-8 text-[#FF0000]" />,
+      'Notion AI': <SiNotion className="w-8 h-8 text-black dark:text-white" />,
+      'Jasper': <FaRobot className="w-8 h-8 text-[#10A37F]" />,
+      'ElevenLabs': <SiElevenlabs className="w-8 h-8" />,
+      'Runway ML': <FaFilm className="w-8 h-8 text-[#4285F4]" />,
+      'DeepL': <FaLanguage className="w-8 h-8 text-[#0F2B46]" />,
+      'Grammarly': <SiGrammarly className="w-8 h-8 text-[#15C39A]" />,
+      'QuillBot': <SiQuora className="w-8 h-8 text-[#B4151E]" />,
+      'Hugging Face': <SiHuggingface className="w-8 h-8 text-[#FFD21E]" />,
+      'Microsoft Copilot': <FaMicrosoft className="w-8 h-8 text-[#0078D4]" />,
+    };
+
+    return logoMap[toolName] || <RiPencilRuler2Line className="w-8 h-8 text-gray-600 dark:text-gray-300" />;
+  };
 
   // Tool Card Component
   const ToolCard = ({ tool }) => {
@@ -154,15 +178,19 @@ const Applications = () => {
         className="group relative bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 border border-gray-100 dark:border-gray-700 flex flex-col h-full"
         whileHover={{ y: -5 }}
       >
-        <div className="relative h-48 overflow-hidden mb-4">
-          <img
-            src={tool.imageUrl || 'https://source.unsplash.com/random/600x400/?ai,technology'}
-            alt={tool.name}
-            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-            onError={(e) => {
-              e.target.src = 'https://source.unsplash.com/random/600x400/?technology,ai';
-            }}
-          />
+        <div className="relative h-48 overflow-hidden mb-4 rounded-lg bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-700 dark:to-gray-800 p-4 flex items-center justify-center">
+          <div className="absolute top-4 left-4 z-10">
+            {getToolLogo(tool.name)}
+          </div>
+            <img
+              src={`https://logo.clearbit.com/${new URL(tool.link).hostname.replace('www.', '')}?size=200`}
+              alt={tool.name}
+              className="w-full h-full object-contain transition-transform duration-500 group-hover:scale-105"
+              onError={(e) => {
+                e.target.src = 'https://ui-avatars.com/api/?name=' + encodeURIComponent(tool.name) + '&background=random&size=200';
+                e.target.className = 'w-full h-full object-cover transition-transform duration-500 group-hover:scale-110';
+              }}
+            />
           <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-5">
             <div className="flex flex-wrap gap-2">
               <span className="inline-flex items-center px-3 py-1 text-xs font-semibold text-white bg-blue-600/90 backdrop-blur-sm rounded-full">
@@ -215,9 +243,6 @@ const Applications = () => {
     );
   };
 
-  // Handle search query change
-  const [searchQuery, setSearchQuery] = useState('');
-  
   // Handle category selection
   const handleCategorySelect = (category) => {
     setSelectedCategory(category === 'All' ? 'All' : category);
@@ -248,7 +273,7 @@ const Applications = () => {
 
           {/* Search and Filter Section */}
           <motion.div 
-            className={`sticky top-4 z-10 mb-8 transition-all duration-300 ${isScrolled ? 'px-4 py-2 -mx-4 bg-white/80 backdrop-blur-md rounded-xl shadow-lg' : ''}`}
+            className="sticky top-4 z-10 mb-8 transition-all duration-300 px-4 py-2 -mx-4 bg-white/80 dark:bg-gray-800/80 backdrop-blur-md rounded-xl shadow-lg"
             initial={false}
             animate={{ 
               y: isScrolled ? 0 : 0,
@@ -262,11 +287,11 @@ const Applications = () => {
                 <input
                   type="text"
                   placeholder="Search AI tools..."
-                  className="w-full px-6 py-4 rounded-xl border-0 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-white dark:focus:ring-offset-gray-900 transition-all duration-200 shadow-lg"
+                  className="w-full px-6 py-4 rounded-xl border-0 bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-white dark:focus:ring-offset-gray-900 transition-all duration-200 shadow-lg"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                 />
-                <FiSearch className="absolute right-5 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500 text-xl" />
+                <FiSearch className="absolute right-5 top-1/2 transform -translate-y-1/2 text-gray-500 dark:text-gray-400 text-xl" />
               </div>
             </div>
             <div className="flex flex-wrap gap-3 mt-6">
@@ -278,7 +303,10 @@ const Applications = () => {
                       ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-md'
                       : 'bg-white/80 dark:bg-gray-800/80 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700/80'
                   }`}
-                  onClick={() => handleCategorySelect(category)}
+                  onClick={() => {
+                setSelectedCategory(category);
+                setSearchQuery('');
+              }}
                 >
                   {category}
                 </button>
