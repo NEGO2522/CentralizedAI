@@ -172,16 +172,16 @@ const Navbar = () => {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -20 }}
                 transition={{ duration: 0.2 }}
-                className="md:hidden absolute top-16 left-0 right-0 bg-gray-800 shadow-lg z-40"
+                className="md:hidden fixed top-16 left-0 right-0 bg-gray-900/95 backdrop-blur-md shadow-lg z-50"
               >
-                <div className="px-2 pt-2 pb-3 space-y-1">
+                <div className="px-4 py-3 space-y-4">
                   <Link
                     to="/applications"
                     onClick={(e) => {
                       handleProtectedNav(e, '/applications');
                       setIsMenuOpen(false);
                     }}
-                    className="block px-3 py-2 rounded-md text-base font-medium text-gray-300 hover:bg-gray-700"
+                    className={`block ${mobileTextColor} py-2`}
                   >
                     AI Tools
                   </Link>
@@ -191,7 +191,7 @@ const Navbar = () => {
                       handleProtectedNav(e, '/blog');
                       setIsMenuOpen(false);
                     }}
-                    className="block px-3 py-2 rounded-md text-base font-medium text-gray-300 hover:bg-gray-700"
+                    className={`block ${mobileTextColor} py-2`}
                   >
                     Blog
                   </Link>
@@ -201,78 +201,53 @@ const Navbar = () => {
                       handleProtectedNav(e, '/learnai');
                       setIsMenuOpen(false);
                     }}
-                    className="block px-3 py-2 rounded-md text-base font-medium text-gray-300 hover:bg-gray-700"
+                    className={`block ${mobileTextColor} py-2`}
                   >
                     Resources
                   </Link>
-                  {!isLoggedIn && (
-                    <>
-                      <Link
-                        to="/login"
-                        onClick={() => setIsMenuOpen(false)}
-                        className="block px-3 py-2 rounded-md text-base font-medium text-blue-400 hover:bg-gray-700"
-                      >
-                        Login
-                      </Link>
-                      <Link
-                        to="/signup"
-                        onClick={() => setIsMenuOpen(false)}
-                        className="block px-3 py-2 rounded-md text-base font-medium text-white bg-blue-600 hover:bg-blue-700"
-                      >
-                        Sign Up
-                      </Link>
-                    </>
-                  )}
+
+                  <div className="pt-3 mt-2 border-t border-gray-700">
+                    {isLoggedIn ? (
+                      <div className="space-y-3">
+                        <div className="px-2 py-1">
+                          <p className="text-sm font-medium text-white">{auth.currentUser?.displayName || 'User'}</p>
+                          <p className="text-xs text-gray-300 truncate">{auth.currentUser?.email}</p>
+                        </div>
+                        <button
+                          onClick={() => {
+                            auth.signOut();
+                            setIsMenuOpen(false);
+                          }}
+                          className="w-full text-center text-red-400 hover:bg-gray-800 px-4 py-2 rounded-lg font-medium"
+                        >
+                          Sign Out
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="space-y-3">
+                        <Link 
+                          to="/login" 
+                          onClick={() => setIsMenuOpen(false)}
+                          className="block text-center text-blue-400 hover:bg-gray-800 px-4 py-2 rounded-lg font-medium"
+                        >
+                          Sign In
+                        </Link>
+                        <Link 
+                          to="/signup" 
+                          onClick={() => setIsMenuOpen(false)}
+                          className="block text-center bg-blue-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700 transition-colors"
+                        >
+                          Sign Up
+                        </Link>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </motion.div>
             )}
           </AnimatePresence>
         </div>
       </div>
-      
-      {/* Mobile Menu */}
-      <AnimatePresence>
-        {isMenuOpen && (
-          <motion.div 
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            transition={{ type: 'tween' }}
-            className="md:hidden shadow-lg overflow-hidden fixed top-16 left-0 right-0 bg-gray-900/95 backdrop-blur-md z-50"
-          >
-            <div className="px-4 py-3 space-y-4">
-              <Link to="/applications" className={`block ${mobileTextColor} py-2`}>AI Tools</Link>
-              <Link to="/blog" className={`block ${mobileTextColor} py-2`}>Blog</Link>
-              <Link to="/learnai" className={`block ${mobileTextColor} py-2`}>Resources</Link>
-              <div className="pt-2 mt-2 border-t border-gray-200">
-                {isLoggedIn ? (
-                  <Link 
-                    to="/profile" 
-                    className="block text-center bg-blue-600 text-white px-4 py-2 rounded-lg font-medium"
-                  >
-                    My Profile
-                  </Link>
-                ) : (
-                  <div className="space-y-3">
-                    <Link 
-                      to="/login" 
-                      className="block text-center text-blue-600 hover:bg-blue-50 px-4 py-2 rounded-lg font-medium"
-                    >
-                      Sign In
-                    </Link>
-                    <Link 
-                      to="/signup" 
-                      className="block text-center bg-blue-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700 transition-colors"
-                    >
-                      Get Started
-                    </Link>
-                  </div>
-                )}
-              </div>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
     </header>
     </>
   );
